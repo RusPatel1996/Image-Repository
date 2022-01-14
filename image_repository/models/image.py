@@ -4,6 +4,11 @@ from django.utils.translation import gettext_lazy as _
 from image_repository.models.user import User
 
 
+class ImageManager(models.Manager):
+    def get_or_create_image(self) -> [object]:
+        pass
+
+
 class Image(models.Model):
     id = models.AutoField(primary_key=True)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -32,3 +37,4 @@ class Image(models.Model):
     def __str__(self):
         return self.name
 
+    objects = ImageManager()
