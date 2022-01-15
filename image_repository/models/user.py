@@ -16,7 +16,7 @@ class UserManager(models.Manager):
             print(f"Multiple users found: {err}")
         return user
 
-    def get_or_create_user(self, user_name: str, password: str, first_name: Optional[str] = '',
+    def get_or_create_user(self, user_name: str, password: bytes, first_name: Optional[str] = '',
                            last_name: Optional[str] = '') -> object:
         user, _ = User.objects.get_or_create(
             user_name=user_name.lower(),
@@ -26,7 +26,7 @@ class UserManager(models.Manager):
         )
         return user
 
-    def update_or_create_user(self, user_id: int, user_name: str, password: str, first_name: Optional[str] = '',
+    def update_or_create_user(self, user_id: int, user_name: str, password: bytes, first_name: Optional[str] = '',
                               last_name: Optional[str] = '') -> object:
         user, _ = User.objects.update_or_create(
             user_name=user_name.lower(),
@@ -36,11 +36,9 @@ class UserManager(models.Manager):
         )
         return user
 
-    def login_user(self, user_name: str, password: str) -> object:
+    def login_user(self, user_name: str, password: bytes) -> object:
         user = self.get_user(user_name)
-        print(Encryption.decrypt(bytes(user.password, 'UTF-8')))
-        print(Encryption.decrypt(password))
-        if user and Encryption.decrypt(bytes(user.password, 'UTF-8')) == Encryption.decrypt(bytes(password, 'UTF-8')):
+        if user and Encryption.decrypt(user.password) == Encryption.decrypt(password):
             return user
         return None
 
@@ -56,7 +54,7 @@ class User(models.Model):
     first_name = models.CharField(max_length=100, blank=True, null=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
     user_name = models.CharField(unique=True, max_length=100, blank=False)
-    password = models.CharField(max_length=50, blank=False)
+    password = models.BinaryField(max_length=50, blank=False)
 
     objects = UserManager()
 

@@ -14,12 +14,11 @@ class LoginForm(forms.Form):
 
 
 class UserRegistrationForm(ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput())
+
     class Meta:
         model = User
         fields = '__all__'
-        widgets = {
-            'password': PasswordInput()
-        }
 
 
 class MultipleImageAddingForm(ModelForm):

@@ -16,11 +16,11 @@ class Encryption:
             return Encryption.__instance
 
     @staticmethod
-    def encrypt(message):
+    def encrypt(message: str):
         instance = Encryption.get_instance()
         return instance.__fernet_instance.encrypt(message.encode())
 
     @staticmethod
-    def decrypt(message):
+    def decrypt(message: bytes):
         instance = Encryption.get_instance()
         return instance.__fernet_instance.decrypt(message).decode()
