@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any
 
 from django.db import models
 
@@ -16,6 +16,7 @@ class UserManager(models.Manager):
 
     def update_or_create_user(self, user_id: int, username: str, password: str, first_name: Optional[str] = '',
                               last_name: Optional[str] = '') -> object:
+
         user, _ = self.update_or_create(
             user_name=username,
             password=password,
@@ -24,7 +25,7 @@ class UserManager(models.Manager):
         )
         return user
 
-    def delete_user(self, user_id: int) -> bool:
+    def delete_user(self, user_id: int) -> tuple:
         user = None
         try:
             user = self.objects.get(id=user_id)
@@ -33,9 +34,8 @@ class UserManager(models.Manager):
         except self.MultipleObjectsReturned as err:
             print(f"Multiple users found: {err}")
         else:
-            user.delete()
-            return True
-        return False
+            return user.delete()
+        return ()
 
 
 class User(models.Model):

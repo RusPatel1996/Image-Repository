@@ -1,16 +1,22 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta name="csrf_token" content="{{ csrf_token }}" charset="UTF-8">
     <title>Image Repository</title>
-    <link rel="stylesheet" href="../../static/styles/index.css">
-    <link rel="script" href="../../static/scripts/index.js">
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/signup.css' %}">
 </head>
 <body>
 
-<h2>Log In</h2>
-<form action="{% url 'image_repository:home' %}" method="post">
+<h2>Sign Up</h2>
+<form action="{% url 'image_repository:register' %}" method="post">
     {% csrf_token %}
+    <label>First Name
+        <input type="text" placeholder="Enter Username" name="uname" required>
+    </label>
+    <label>Last Name
+        <input type="text" placeholder="Enter Username" name="uname" required>
+    </label>
     <label>Username
         <input type="text" placeholder="Enter Username" name="uname" required>
     </label>
@@ -20,7 +26,6 @@
     <button type="submit">Log In</button>
 </form>
 
-<p><a href="{% url 'image_repository:signup' %}">Sign Up</a></p>
 
 </body>
 </html>
