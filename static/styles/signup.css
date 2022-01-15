@@ -1,7 +1,15 @@
-body {
-  background-color: lightblue;
+input {
+    margin-top: 5px;
 }
 
-input {
-    margin:5px;
+table {
+    border-collapse: collapse;
+    width: 25%;
+    margin-top: 5px;
+}
+
+td, th {
+    border: none;
+    text-align: left;
+    padding: 5px;
 }

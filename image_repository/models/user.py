@@ -1,24 +1,25 @@
 from typing import Optional, Any
 
 from django.db import models
+from collections import defaultdict
 
 
 class UserManager(models.Manager):
-    def get_or_create_user(self, username: str, password: str, first_name: Optional[str] = '',
+    def get_or_create_user(self, user_name: str, password: str, first_name: Optional[str] = '',
                            last_name: Optional[str] = '') -> object:
         user, _ = self.get_or_create(
-            user_name=username,
+            user_name=user_name,
             password=password,
             first_name=first_name,
             last_name=last_name
         )
         return user
 
-    def update_or_create_user(self, user_id: int, username: str, password: str, first_name: Optional[str] = '',
+    def update_or_create_user(self, user_id: int, user_name: str, password: str, first_name: Optional[str] = '',
                               last_name: Optional[str] = '') -> object:
 
         user, _ = self.update_or_create(
-            user_name=username,
+            user_name=user_name,
             password=password,
             first_name=first_name,
             last_name=last_name
@@ -40,12 +41,10 @@ class UserManager(models.Manager):
 
 class User(models.Model):
     id = models.AutoField(primary_key=True)
-    user_name = models.CharField(unique=True, max_length=100, blank=False,
-                                 help_text='Please add a user name less than 100 characters long')
-    password = models.CharField(max_length=50, blank=False,
-                                help_text='Please add a password less than 50 characters long')
-    first_name = models.CharField(max_length=100, blank=True, null=True, default="Guest")
+    first_name = models.CharField(max_length=100, blank=True, null=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
+    user_name = models.CharField(unique=True, max_length=100, blank=False)
+    password = models.CharField(max_length=50, blank=False)
 
     def __str__(self):
         return self.user_name

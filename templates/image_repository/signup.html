@@ -8,22 +8,39 @@
 </head>
 <body>
 
-<h2>Sign Up</h2>
-<form action="{% url 'image_repository:register' %}" method="post">
+<h2><u>Sign Up</u></h2>
+<form action="{% url 'image_repository:signup' %}" method="post">
     {% csrf_token %}
-    <label>First Name
-        <input type="text" placeholder="Enter Username" name="uname" required>
-    </label>
-    <label>Last Name
-        <input type="text" placeholder="Enter Username" name="uname" required>
-    </label>
-    <label>Username
-        <input type="text" placeholder="Enter Username" name="uname" required>
-    </label>
-    <label>Password
-        <input type="password" placeholder="Enter Password" name="pwd" required>
-    </label>
-    <button type="submit">Log In</button>
+    <table>
+    {{ form.as_table }}
+    </table>
+    <input type="submit" value="Submit">
+</form>
+
+{#<form action="{% url 'image_repository:signup_redirect' %}" method="post">#}
+{#    {% csrf_token %}#}
+{#    <table>#}
+{#        <tr>#}
+{#            <td><label>First Name</label></td>#}
+{#            <td><input type="text" placeholder="Enter First Name" name="first_name" maxlength="100"></td>#}
+{#        </tr>#}
+{#        <tr>#}
+{#            <td><label>Last Name</label></td>#}
+{#            <td><input type="text" placeholder="Enter Last Name" name="last_name" maxlength="100"></td>#}
+{#        </tr>#}
+{#        <tr>#}
+{#            <td><label>Username*</label></td>#}
+{#            <td><input type="text" placeholder="Enter Username" name="user_name" maxlength="100" required></td>#}
+{#        </tr>#}
+{#        <tr>#}
+{#            <td><label>Password*</label></td>#}
+{#            <td><input type="password" placeholder="Enter Password" name="password" maxlength="50" required></td>#}
+{#        </tr>#}
+{#        <tr>#}
+{#            <td><button type="submit" name="action" value="signup">Sign Up</button></td>#}
+{#        </tr>#}
+{#    </table>#}
+
 </form>
 
 
