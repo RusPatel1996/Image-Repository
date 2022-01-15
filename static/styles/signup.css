@@ -1,13 +1,14 @@
-input {
-    margin-top: 5px;
+body {
+    background-color: #FFE6DF;
 }
-
+input {
+    margin: 5px;
+}
 table {
     border-collapse: collapse;
     width: 25%;
-    margin-top: 5px;
+    margin: 10px;
 }
-
 td, th {
     border: none;
     text-align: left;

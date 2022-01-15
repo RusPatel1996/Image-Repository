@@ -1,18 +1,27 @@
+import io
+
 from django.contrib import messages
 from django.shortcuts import render
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.urls import reverse
+from rest_framework.parsers import JSONParser
+from rest_framework.renderers import JSONRenderer
 
 from image_repository.forms import UserRegistrationForm, MultipleImageAddingForm, LoginForm
 from image_repository.models.user import User, UserManager
 from image_repository.models.image import Image, ImageManager
 from utils.encrypt import Encryption
+from image_repository.serializer import UserSerializer
 
 MAX_INT = 2 ** 31 - 1
 MIN_INT = -2 ** 31
 
 
 def index(request):
+    return HttpResponseRedirect('login')
+
+
+def login(request):
     if request.method == 'POST':
         login_form = LoginForm(request.POST)
         if login_form.is_valid():
@@ -21,8 +30,8 @@ def index(request):
             user_name = data.get('user_name')
             password = Encryption.encrypt(data.get('password'))
             user = manager.login_user(user_name, password)
-            encrypted_user_name = Encryption.encrypt(user_name).decode()
             if user:
+                encrypted_user_name = Encryption.encrypt(user_name).decode()
                 return HttpResponseRedirect(reverse('image_repository:home', args=(encrypted_user_name,)))
     else:
         login_form = LoginForm()
@@ -30,12 +39,12 @@ def index(request):
 
 
 def home(request, user_name):
-    print(Encryption.decrypt(user_name.encode()))
-    if request.method == 'POST':
-        pass
-    else:
-        pass
-    return render(request, 'image_repository/home.html')
+    manager = UserManager()
+    user_name = Encryption.decrypt(user_name.encode())
+    user = UserManager.get_user(user_name)
+    return render(request, 'image_repository/home.html', {
+        'user_name': user.first_name,
+    })
 
 
 def signup(request):

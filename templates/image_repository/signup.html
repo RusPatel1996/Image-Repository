@@ -5,8 +5,10 @@
     <meta name="csrf_token" content="{{ csrf_token }}" charset="UTF-8">
     <title>Image Repository</title>
     <link rel="stylesheet" type="text/css" href="{% static 'styles/signup.css' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
 </head>
 <body>
+
 <h2><u>Sign Up</u></h2>
 <form action="{% url 'image_repository:signup' %}" method="post">
     {% csrf_token %}
@@ -15,33 +17,6 @@
     </table>
     <input type="submit" value="Submit">
 </form>
-
-{#<form action="{% url 'image_repository:signup_redirect' %}" method="post">#}
-{#    {% csrf_token %}#}
-{#    <table>#}
-{#        <tr>#}
-{#            <td><label>First Name</label></td>#}
-{#            <td><input type="text" placeholder="Enter First Name" name="first_name" maxlength="100"></td>#}
-{#        </tr>#}
-{#        <tr>#}
-{#            <td><label>Last Name</label></td>#}
-{#            <td><input type="text" placeholder="Enter Last Name" name="last_name" maxlength="100"></td>#}
-{#        </tr>#}
-{#        <tr>#}
-{#            <td><label>Username*</label></td>#}
-{#            <td><input type="text" placeholder="Enter Username" name="user_name" maxlength="100" required></td>#}
-{#        </tr>#}
-{#        <tr>#}
-{#            <td><label>Password*</label></td>#}
-{#            <td><input type="password" placeholder="Enter Password" name="password" maxlength="50" required></td>#}
-{#        </tr>#}
-{#        <tr>#}
-{#            <td><button type="submit" name="action" value="signup">Sign Up</button></td>#}
-{#        </tr>#}
-{#    </table>#}
-
-</form>
-
 
 </body>
 </html>

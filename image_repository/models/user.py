@@ -6,16 +6,19 @@ from utils.encrypt import Encryption
 
 
 class UserManager(models.Manager):
-    def get_user(self, user_name: str) -> Optional[object]:
-        user = None
+    @staticmethod
+    def get_user(user_name: str):
         try:
             user = User.objects.get(user_name=user_name.lower())
         except User.DoesNotExist as err:
             print(f"User does not exist: {err}")
         except User.MultipleObjectsReturned as err:
             print(f"Multiple users found: {err}")
-        return user
+        else:
+            return user
+        return None
 
+    @staticmethod
     def get_or_create_user(self, user_name: str, password: bytes, first_name: Optional[str] = '',
                            last_name: Optional[str] = '') -> object:
         user, _ = User.objects.get_or_create(
@@ -26,6 +29,7 @@ class UserManager(models.Manager):
         )
         return user
 
+    @staticmethod
     def update_or_create_user(self, user_id: int, user_name: str, password: bytes, first_name: Optional[str] = '',
                               last_name: Optional[str] = '') -> object:
         user, _ = User.objects.update_or_create(
@@ -36,12 +40,14 @@ class UserManager(models.Manager):
         )
         return user
 
+    @staticmethod
     def login_user(self, user_name: str, password: bytes) -> object:
         user = self.get_user(user_name)
         if user and Encryption.decrypt(user.password) == Encryption.decrypt(password):
             return user
         return None
 
+    @staticmethod
     def delete_user(self, user_name: str) -> Optional[tuple]:
         user = self.get_user(user_name)
         if user:

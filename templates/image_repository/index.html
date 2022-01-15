@@ -1,9 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta name="csrf_token" content="{{ csrf_token }}" charset="UTF-8">
     <title>Image Repository</title>
-    <link rel="stylesheet" href="../../static/styles/index.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/index.css' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
 </head>
 <body>
 
@@ -23,25 +25,6 @@
     </table>
     <input type="submit" value="Submit">
 </form>
-
-{#<form action="{% url 'image_repository:signin_redirect' %}" method="post">#}
-{#    {% csrf_token %}#}
-{#    <table>#}
-{#        <tr>#}
-{#            <td><label>Username</label></td>#}
-{#            <td><input type="text" placeholder="Enter Username" name="user_name" maxlength="100" required></td>#}
-{#        </tr>#}
-{#        <tr>#}
-{#            <td><label>Password</label></td>#}
-{#            <td><input type="password" placeholder="Enter Password" name="password" maxlength="50" required></td>#}
-{#        </tr>#}
-{#        <tr>#}
-{#            <td>#}
-{#                <button type="submit" name="action" value="login">Log In</button>#}
-{#            </td>#}
-{#        </tr>#}
-{#    </table>#}
-{#</form>#}
 
 <p><a href="{% url 'image_repository:signup' %}">Sign Up</a></p>
 
