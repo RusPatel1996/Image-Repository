@@ -1,16 +1,16 @@
 from django.forms import ModelForm, ClearableFileInput, PasswordInput
+from django import forms
 
 from image_repository.models.image import Image
 from image_repository.models.user import User
 
 
-class LoginForm(ModelForm):
+class LoginForm(forms.Form):
+    user_name = forms.CharField()
+    password = forms.CharField(widget=forms.PasswordInput())
+
     class Meta:
         model = User
-        fields = ['user_name', 'password']
-        widgets = {
-            'password': PasswordInput()
-        }
 
 
 class UserRegistrationForm(ModelForm):

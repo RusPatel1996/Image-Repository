@@ -7,7 +7,6 @@
     <link rel="stylesheet" type="text/css" href="{% static 'styles/signup.css' %}">
 </head>
 <body>
-
 <h2><u>Sign Up</u></h2>
 <form action="{% url 'image_repository:signup' %}" method="post">
     {% csrf_token %}

@@ -4,9 +4,16 @@
     <meta name="csrf_token" content="{{ csrf_token }}" charset="UTF-8">
     <title>Image Repository</title>
     <link rel="stylesheet" href="../../static/styles/index.css">
-    <link rel="script" href="../../static/scripts/index.js">
 </head>
 <body>
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li  {% if message.tags %} class=" {{ message.tags }} " {% endif %}> {{ message }} </li>
+    {% endfor %}
+</ul>
+{% endif %}
 
 <h2><u>Log In</u></h2>
 <form action="{% url 'image_repository:login' %}" method="post">

@@ -3,12 +3,20 @@
 <head>
     <meta name="csrf_token" content="{{ csrf_token }}" charset="UTF-8">
     <title>Image Repository</title>
-    <link rel="stylesheet" href="../../static/styles/index.css">
-    <link rel="script" href="../../static/scripts/index.js">
+    <link rel="stylesheet" href="">
 </head>
 <body>
 
 <h2>Home</h2>
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li  {% if message.tags %} class=" {{ message.tags }} " {% endif %}> {{ message }} </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
 
 
 </body>
