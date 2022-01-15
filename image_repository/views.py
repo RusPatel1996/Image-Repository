@@ -21,14 +21,16 @@ def index(request):
             user_name = data.get('user_name')
             password = Encryption.encrypt(data.get('password'))
             user = manager.login_user(user_name, password)
+            encrypted_user_name = Encryption.encrypt(user_name).decode()
             if user:
-                return HttpResponseRedirect(reverse('image_repository:home', args=(user_name,)))
+                return HttpResponseRedirect(reverse('image_repository:home', args=(encrypted_user_name,)))
     else:
         login_form = LoginForm()
     return render(request, 'image_repository/index.html', {'login_form': login_form})
 
 
 def home(request, user_name):
+    print(Encryption.decrypt(user_name.encode()))
     if request.method == 'POST':
         pass
     else:

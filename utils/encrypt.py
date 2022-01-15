@@ -4,6 +4,7 @@ from cryptography.fernet import Fernet
 class Encryption:
     __instance = None
     __fernet_instance = None
+    __key = b'QY96HoHF8VrgcBp6R_MhygtGhDTP_BVG8C7NMOkYTvY='
 
     @staticmethod
     def get_instance():
@@ -11,8 +12,7 @@ class Encryption:
             return Encryption.__instance
         else:
             Encryption.__instance = Encryption()
-            key = Fernet.generate_key()
-            Encryption.__fernet_instance = Fernet(key)
+            Encryption.__fernet_instance = Fernet(Encryption.__key)
             return Encryption.__instance
 
     @staticmethod
