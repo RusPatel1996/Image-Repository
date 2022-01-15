@@ -1,16 +1,41 @@
 body {
     background-color: #FFE6DF;
+    font-family: arial, sans-serif;
 }
+
+fieldset {
+    background-color: #eeeeee;
+}
+
+legend {
+    background-color: gray;
+    color: white;
+    padding: 0 30px;
+}
+
 input {
-    margin: 5px;
+    margin-top: 5px;
 }
+
 table {
     border-collapse: collapse;
     width: 25%;
-    margin: 10px;
+    margin-top: 10px;
 }
+
 td, th {
     border: none;
     text-align: left;
     padding: 5px;
+}
+
+.messages {
+    display: block;
+    position: relative;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+    border-radius: 0.25rem;
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
 }

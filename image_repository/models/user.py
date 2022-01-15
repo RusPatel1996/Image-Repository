@@ -7,7 +7,7 @@ from utils.encrypt import Encryption
 
 class UserManager(models.Manager):
     @staticmethod
-    def get_user(user_name: str):
+    def get_user(user_name: str) -> Optional[object]:
         try:
             user = User.objects.get(user_name=user_name.lower())
         except User.DoesNotExist as err:
@@ -19,7 +19,7 @@ class UserManager(models.Manager):
         return None
 
     @staticmethod
-    def get_or_create_user(self, user_name: str, password: bytes, first_name: Optional[str] = '',
+    def get_or_create_user(user_name: str, password: bytes, first_name: Optional[str] = '',
                            last_name: Optional[str] = '') -> object:
         user, _ = User.objects.get_or_create(
             user_name=user_name.lower(),
@@ -30,7 +30,7 @@ class UserManager(models.Manager):
         return user
 
     @staticmethod
-    def update_or_create_user(self, user_id: int, user_name: str, password: bytes, first_name: Optional[str] = '',
+    def update_or_create_user(user_name: str, password: bytes, first_name: Optional[str] = '',
                               last_name: Optional[str] = '') -> object:
         user, _ = User.objects.update_or_create(
             user_name=user_name.lower(),
@@ -41,15 +41,15 @@ class UserManager(models.Manager):
         return user
 
     @staticmethod
-    def login_user(self, user_name: str, password: bytes) -> object:
-        user = self.get_user(user_name)
+    def login_user(user_name: str, password: bytes) -> object:
+        user = UserManager.get_user(user_name)
         if user and Encryption.decrypt(user.password) == Encryption.decrypt(password):
             return user
         return None
 
     @staticmethod
-    def delete_user(self, user_name: str) -> Optional[tuple]:
-        user = self.get_user(user_name)
+    def delete_user(user_name: str) -> Optional[tuple]:
+        user = UserManager.get_user(user_name)
         if user:
             return user.delete(user)
         return user

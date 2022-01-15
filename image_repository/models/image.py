@@ -5,7 +5,30 @@ from image_repository.models.user import User
 
 
 class ImageManager(models.Manager):
-    def get_or_create_image(self) -> [object]:
+    @staticmethod
+    def search_image_characteristics(height, width, color):
+        pass
+
+    @staticmethod
+    def search_image_by_text(name):
+        pass
+
+    @staticmethod
+    def search_images_with_image(image):
+        pass
+
+    @staticmethod
+    def add_image(user_id, image):
+        pass
+
+    @staticmethod
+    def add_images(user_id, images):
+        pass
+
+    def calculate_height_width(self, image) -> (int, int):
+        pass
+
+    def calculate_color(self, image):
         pass
 
 
@@ -34,7 +57,7 @@ class Image(models.Model):
     permission = models.SmallIntegerField(choices=Permission.choices, blank=False, default=Permission.PRIVATE)
     last_updated = models.DateTimeField(auto_now_add=True, blank=False)
 
+    objects = ImageManager()
+
     def __str__(self):
         return self.name
-
-    objects = ImageManager()

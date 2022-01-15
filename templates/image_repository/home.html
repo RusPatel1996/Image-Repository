@@ -9,17 +9,27 @@
 </head>
 <body>
 
-<h2><u>Hello {{ user_name }}</u></h2>
-
 {% if messages %}
-<ul class="messages">
-    {% for message in messages %}
-    <li  {% if message.tags %} class=" {{ message.tags }} " {% endif %}> {{ message }} </li>
-    {% endfor %}
-</ul>
+    <ul class="messages">
+        {% for message in messages %}
+            <p  {% if message.tags %} class=" {{ message.tags }} " {% endif %}> {{ message }} </p>
+        {% endfor %}
+    </ul>
 {% endif %}
 
+<h2><u>Hello {% if first_name %}{{ first_name }}{% else %}{{ "Anonymous User" }}{% endif %}</u></h2>
+<form action="{% url 'image_repository:home' url %}" method="post">
+    <fieldset>
+        <legend><h3>Upload</h3></legend>
+        {% csrf_token %}
+        <table>
+            {{ image_form.as_table }}
+        </table>
+        <input type="submit" value="Submit">
+    </fieldset>
+</form>
 
+<p><a href="{% url 'image_repository:index' %}">Log out</a></p>
 
 </body>
 </html>

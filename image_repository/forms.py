@@ -6,25 +6,24 @@ from image_repository.models.user import User
 
 
 class LoginForm(forms.Form):
-    user_name = forms.CharField()
-    password = forms.CharField(widget=forms.PasswordInput())
+    user_name = forms.CharField(max_length=100)
+    password = forms.CharField(max_length=50, widget=forms.PasswordInput())
 
     class Meta:
         model = User
 
 
-class UserRegistrationForm(ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput())
+class SignUpForm(ModelForm):
+    password = forms.CharField(max_length=50, widget=forms.PasswordInput())
 
     class Meta:
         model = User
         fields = '__all__'
 
 
-class MultipleImageAddingForm(ModelForm):
+class ImageUploadForm(forms.Form):
+    name = forms.CharField(max_length=100)
+    image = forms.ImageField()
+
     class Meta:
         model = Image
-        fields = '__all__'
-        widgets = {
-            'media': ClearableFileInput(attrs={'multiple': True})
-        }
