@@ -41,21 +41,22 @@ class ImageManager(models.Manager):
     @staticmethod
     def add_images(user: User, images, permission, name=''):
         for image in images.getlist('image'):
-            image_hash = imagehash.average_hash(PILImage.open(image))
+            image = ImageManager.resize_image(image, 150)
+            image_hash = imagehash.average_hash(image)
             if image_object := ImageManager.search_image_with_hash(image_hash):
                 name = name if name else image_object.name
                 image = image_object.image
                 color = image_object.color
             else:
-                name = name if name else image.name.split('.')[0]
-                image = ImageManager.compress_size(image, name)
+                # TODO fix name
+                name = name if name else "test"
                 color = ImageManager.calculate_color(image)
+                image = ImageManager.compress_size(image, name)
             Image.objects.create(user=user, name=name, image=image, image_hash=image_hash, color=color,
                                  permission=permission)
 
     @staticmethod
-    def compress_size(image, name):
-        img = ImageManager.resize_image(image, 150)
+    def compress_size(img, name):
         output = BytesIO()
         img.save(output, format='JPEG', quality=95)
         output.seek(0)
@@ -63,10 +64,11 @@ class ImageManager(models.Manager):
                                     sys.getsizeof(output), None)
 
     @staticmethod
-    def calculate_color(image):
-        img = ImageManager.resize_image(image, 150)
+    def calculate_color(img):
+        ''' Slows down the uploading performance by at least 4x '''
         pixels = img.getdata()
-        kmeans = KMeans()
+        n = 2
+        kmeans = KMeans(n_clusters=n)
         kmeans.fit(pixels)
         centers = kmeans.cluster_centers_
         red, green, blue = 0, 0, 0
@@ -74,9 +76,35 @@ class ImageManager(models.Manager):
             red += rgb[0]
             green += rgb[1]
             blue += rgb[2]
+        red, green, blue = red // n, green // n, blue // n
 
-        # TODO: Logic for color determination
-        return Image.Color.RED
+        return ImageManager.get_color(red, green, blue)
+
+    @staticmethod
+    def get_color(red, green, blue):
+        primary_rate = 0.85
+        secondary_rate = 0.50
+        if red / (green + blue) > primary_rate:
+            return Image.Color.RED
+        elif green / (red + blue) > primary_rate:
+            return Image.Color.GREEN
+        elif blue / (red + green) > primary_rate:
+            return Image.Color.BLUE
+        else:
+            majority = max(red, green, blue)
+            if majority == red:
+                if red / (green + blue) > secondary_rate:
+                    return Image.Color.YELLOW
+                return Image.Color.RED
+            elif majority == green:
+                if green / (red + blue) > secondary_rate:
+                    return Image.Color.CYAN
+                return Image.Color.GREEN
+            else:
+                if blue / (red + green) > secondary_rate:
+                    return Image.Color.PURPLE
+                return Image.Color.BLUE
+
 
     @staticmethod
     def resize_image(image, largest_length):
