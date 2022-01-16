@@ -35,23 +35,39 @@ def home(request, encrypted_user_name):
     user_name = Encryption.decrypt(encrypted_user_name.encode())
     user = UserManager.get_user(user_name)
     images = ImageManager.get_user_images(user)
+    image_upload_form = ImageUploadForm()
+    image_search_form = ImageSearchForm()
     if request.method == 'POST':
-        image_upload_form = ImageUploadForm(request.POST, request.FILES)
-        if image_upload_form.is_valid():
-            data = image_upload_form.cleaned_data
-            ImageManager.add_images(user, request.FILES, data.get('name'))
-            messages.success(request, 'Added')
+        if request.POST.get('action') == 'Upload':
+            upload(request, user)
             return HttpResponseRedirect(reverse('image_repository:home', args=(encrypted_user_name,)))
-    else:
-        image_upload_form = ImageUploadForm()
-        image_search_form = ImageSearchForm()
-    return render(request, 'image_repository/home.html', {
-        'image_upload_form': image_upload_form,
-        'image_search_form': image_search_form,
-        'url': encrypted_user_name,
-        'first_name': user.first_name,
-        'list_of_images': images
-    })
+        elif request.POST.get('action') == 'Search':
+            images = search(request)
+            return home_render(request, image_upload_form, image_search_form, encrypted_user_name, user, images)
+    return home_render(request, image_upload_form, image_search_form, encrypted_user_name, user, images)
+
+
+def upload(request, user):
+    image_upload_form = ImageUploadForm(request.POST, request.FILES)
+    if image_upload_form.is_valid():
+        data = image_upload_form.cleaned_data
+        permission = data.get('permission')
+        name = data.get('name')
+        ImageManager.add_images(user, request.FILES, permission, name)
+        messages.success(request, 'Added')
+
+
+def search(request):
+    image_search_form = ImageSearchForm(request.POST)
+    if image_search_form.is_valid():
+        data = image_search_form.cleaned_data
+        height = data.get('height')
+        width = data.get('width')
+        name = data.get('name')
+        color = data.get('color')
+        permission = data.get('permission')
+        images = ImageManager.search_image_characteristics(color, permission, height, width, name)
+        return images
 
 
 def signup(request):
@@ -70,4 +86,14 @@ def signup(request):
         signup_form = SignUpForm()
     return render(request, 'image_repository/signup.html', {
         'signup_form': signup_form,
+    })
+
+
+def home_render(request, image_upload_form, image_search_form, encrypted_user_name, user, images):
+    return render(request, 'image_repository/home.html', {
+        'image_upload_form': image_upload_form,
+        'image_search_form': image_search_form,
+        'url': encrypted_user_name,
+        'first_name': user.first_name,
+        'list_of_images': images
     })

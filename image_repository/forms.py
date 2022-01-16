@@ -1,4 +1,3 @@
-from django.forms import ModelForm, ClearableFileInput, PasswordInput
 from django import forms
 
 from image_repository.models.image import Image
@@ -13,7 +12,7 @@ class LoginForm(forms.Form):
         model = User
 
 
-class SignUpForm(ModelForm):
+class SignUpForm(forms.ModelForm):
     password = forms.CharField(max_length=50, widget=forms.PasswordInput())
 
     class Meta:
@@ -25,22 +24,27 @@ class SignUpForm(ModelForm):
         }
 
 
-class ImageUploadForm(ModelForm):
+class ImageUploadForm(forms.ModelForm):
     name = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'placeholder': 'Optional'}))
+    options = (
+        (Image.Permission.PRIVATE, Image.Permission.PRIVATE),
+        (Image.Permission.PUBLIC, Image.Permission.PUBLIC),
+    )
+    permission = forms.CharField(widget=forms.Select(choices=options))
 
     class Meta:
         model = Image
         fields = ['image']
         widgets = {
-            'image': ClearableFileInput(attrs={'multiple': True}),
+            'image': forms.ClearableFileInput(attrs={'multiple': True}),
         }
 
 
-class ImageSearchForm(forms.Form):
-    height = forms.IntegerField(required=False)
-    width = forms.IntegerField(required=False)
+class ImageSearchForm(forms.ModelForm):
+    height = forms.IntegerField(required=False, initial=0)
+    width = forms.IntegerField(required=False, initial=0)
     name = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'placeholder': 'Optional'}))
-    image = forms.CharField(required=False, widget=forms.TextInput(attrs={'placeholder': 'Optional'}))
 
     class Meta:
         model = Image
+        fields = ['color', 'permission']
