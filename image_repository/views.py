@@ -3,12 +3,10 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from image_repository.forms import SignUpForm, LoginForm, ImageUploadForm
+from image_repository.forms import SignUpForm, LoginForm, ImageUploadForm, ImageSearchForm
 from image_repository.models.user import UserManager
+from image_repository.models.image import ImageManager
 from utils.encrypt import Encryption
-
-MAX_INT = 2 ** 31 - 1
-MIN_INT = -2 ** 31
 
 
 def index(request):
@@ -36,16 +34,23 @@ def login(request):
 def home(request, encrypted_user_name):
     user_name = Encryption.decrypt(encrypted_user_name.encode())
     user = UserManager.get_user(user_name)
+    images = ImageManager.get_user_images(user)
     if request.method == 'POST':
-        image_form = ImageUploadForm(request.POST)
-        if image_form.is_valid():
-            print("VALID")
+        image_upload_form = ImageUploadForm(request.POST, request.FILES)
+        if image_upload_form.is_valid():
+            data = image_upload_form.cleaned_data
+            ImageManager.add_images(user, request.FILES, data.get('name'))
+            messages.success(request, 'Added')
+            return HttpResponseRedirect(reverse('image_repository:home', args=(encrypted_user_name,)))
     else:
-        image_form = ImageUploadForm()
+        image_upload_form = ImageUploadForm()
+        image_search_form = ImageSearchForm()
     return render(request, 'image_repository/home.html', {
-        'image_form': image_form,
+        'image_upload_form': image_upload_form,
+        'image_search_form': image_search_form,
         'url': encrypted_user_name,
         'first_name': user.first_name,
+        'list_of_images': images
     })
 
 
@@ -66,9 +71,3 @@ def signup(request):
     return render(request, 'image_repository/signup.html', {
         'signup_form': signup_form,
     })
-
-
-def within_bounds(number) -> bool:
-    if MIN_INT <= int(number) <= MAX_INT:
-        return True
-    return False

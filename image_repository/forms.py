@@ -19,11 +19,28 @@ class SignUpForm(ModelForm):
     class Meta:
         model = User
         fields = '__all__'
+        widgets = {
+            'first_name': forms.TextInput(attrs={'placeholder': 'Optional'}),
+            'last_name': forms.TextInput(attrs={'placeholder': 'Optional'}),
+        }
 
 
-class ImageUploadForm(forms.Form):
-    name = forms.CharField(max_length=100)
-    image = forms.ImageField()
+class ImageUploadForm(ModelForm):
+    name = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'placeholder': 'Optional'}))
+
+    class Meta:
+        model = Image
+        fields = ['image']
+        widgets = {
+            'image': ClearableFileInput(attrs={'multiple': True}),
+        }
+
+
+class ImageSearchForm(forms.Form):
+    height = forms.IntegerField(required=False)
+    width = forms.IntegerField(required=False)
+    name = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'placeholder': 'Optional'}))
+    image = forms.CharField(required=False, widget=forms.TextInput(attrs={'placeholder': 'Optional'}))
 
     class Meta:
         model = Image

@@ -1,5 +1,3 @@
-from typing import Optional
-
 from django.db import models
 
 from utils.encrypt import Encryption
@@ -7,7 +5,7 @@ from utils.encrypt import Encryption
 
 class UserManager(models.Manager):
     @staticmethod
-    def get_user(user_name: str) -> Optional[object]:
+    def get_user(user_name: str):
         try:
             user = User.objects.get(user_name=user_name.lower())
         except User.DoesNotExist as err:
@@ -19,8 +17,8 @@ class UserManager(models.Manager):
         return None
 
     @staticmethod
-    def get_or_create_user(user_name: str, password: bytes, first_name: Optional[str] = '',
-                           last_name: Optional[str] = '') -> object:
+    def get_or_create_user(user_name: str, password: bytes, first_name: str = '',
+                           last_name: str = ''):
         user, _ = User.objects.get_or_create(
             user_name=user_name.lower(),
             password=password,
@@ -30,8 +28,8 @@ class UserManager(models.Manager):
         return user
 
     @staticmethod
-    def update_or_create_user(user_name: str, password: bytes, first_name: Optional[str] = '',
-                              last_name: Optional[str] = '') -> object:
+    def update_or_create_user(user_name: str, password: bytes, first_name: str = '',
+                              last_name: str = ''):
         user, _ = User.objects.update_or_create(
             user_name=user_name.lower(),
             password=password,
@@ -41,14 +39,14 @@ class UserManager(models.Manager):
         return user
 
     @staticmethod
-    def login_user(user_name: str, password: bytes) -> object:
+    def login_user(user_name: str, password: bytes):
         user = UserManager.get_user(user_name)
         if user and Encryption.decrypt(user.password) == Encryption.decrypt(password):
             return user
         return None
 
     @staticmethod
-    def delete_user(user_name: str) -> Optional[tuple]:
+    def delete_user(user_name: str):
         user = UserManager.get_user(user_name)
         if user:
             return user.delete(user)

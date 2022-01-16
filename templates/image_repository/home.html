@@ -18,16 +18,67 @@
 {% endif %}
 
 <h2><u>Hello {% if first_name %}{{ first_name }}{% else %}{{ "Anonymous User" }}{% endif %}</u></h2>
-<form action="{% url 'image_repository:home' url %}" method="post">
-    <fieldset>
-        <legend><h3>Upload</h3></legend>
-        {% csrf_token %}
-        <table>
-            {{ image_form.as_table }}
-        </table>
-        <input type="submit" value="Submit">
-    </fieldset>
-</form>
+
+<table>
+    <tr>
+        <td>
+            <form action="{% url 'image_repository:home' url %}" method="post" enctype="multipart/form-data">
+                <fieldset>
+                    <legend><h3>Upload</h3></legend>
+                    {% csrf_token %}
+                    <table>
+                        {{ image_upload_form.as_table }}
+                    </table>
+                    <input type="submit" value="Submit">
+                </fieldset>
+            </form>
+        </td>
+        <td>
+            <form action="{% url 'image_repository:home' url %}" method="post" enctype="multipart/form-data">
+                <fieldset>
+                    <legend><h3>Search</h3></legend>
+                    {% csrf_token %}
+                    <table>
+                        {{ image_search_form.as_table }}
+                    </table>
+                    <input type="submit" value="Submit">
+                </fieldset>
+            </form>
+        </td>
+    </tr>
+</table>
+
+
+
+
+{% if list_of_images %}
+    <table>
+        <tr>
+            <th> Image</th>
+            <th> Name</th>
+            <th> height</th>
+            <th> Width</th>
+        </tr>
+        {% for image in list_of_images %}
+            <tr>
+                <td>
+                    <img src='{{ MEDIA_URL }}{{ image.image }}' width="100" height="100"/>
+                </td>
+                <td>{{ image.name }}</td>
+                <td>{{ image.height }}px</td>
+                <td>{{ image.width }}px</td>
+                <td style="border: none; width: 10%;">
+                    {#                    <form action="{% url 'image_repository:delete' image.id %}" method="post">#}
+                    {#                        {% csrf_token %}#}
+                    {#                        <input type="submit" name="action" value="Delete Item">#}
+                    {#                    </form>#}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>No items are available.</p>
+{% endif %}
 
 <p><a href="{% url 'image_repository:index' %}">Log out</a></p>
 
