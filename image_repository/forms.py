@@ -47,4 +47,4 @@ class ImageSearchForm(forms.ModelForm):
 
     class Meta:
         model = Image
-        fields = ['color', 'permission']
+        fields = ['permission', 'color']
