@@ -31,9 +31,10 @@ CSRF_TRUSTED_ORIGINS = ['https://shopify-data-eng-intern.herokuapp.com']
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
-SECURE_SSL_REDIRECT = False
+# SESSION_COOKIE_SECURE = False
+# CSRF_COOKIE_SECURE = False
+# SECURE_SSL_REDIRECT = False
+# SECURE_CONTENT_TYPE_NOSNIFF = False
 
 # Application definition
 

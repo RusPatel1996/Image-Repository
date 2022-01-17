@@ -14,12 +14,14 @@ from image_repository.models.user import User
 
 class ImageManager(models.Manager):
     @staticmethod
-    def search_image_characteristics(color, permission, image=None, height=0, width=0, name=''):
-        objects = Image.objects.filter(height__gt=height, width__gt=width, name__icontains=name)
+    def search_image_characteristics(color, permission, image=None, height=None, width=None, name=''):
+        height = 0 if not height else height
+        width = 0 if not width else width
+        objects = Image.objects.filter(height__gte=height, width__gte=width, name__icontains=name)
         if color != Image.Color.ANY:
-            objects = objects.filter(color=color)
+            objects = objects.filter(color__exact=color)
         if permission != Image.Permission.ALL:
-            objects = objects.filter(permission=permission)
+            objects = objects.filter(permission__exact=permission)
         if image:
             objects = ImageManager.search_images_with_image(image, objects, similarity=75)
         return objects
@@ -44,7 +46,7 @@ class ImageManager(models.Manager):
 
     @staticmethod
     def get_user_images(user: User):
-        return Image.objects.filter(user=user)
+        return Image.objects.filter(user__exact=user)
 
     @staticmethod
     def upload_images(user: User, images, permission, name=''):
@@ -52,21 +54,24 @@ class ImageManager(models.Manager):
         to database. Remove color field to increase performance. Images are uploaded as private unless otherwise
         chosen by the user. """
         for image in images.getlist('image'):
-            img = ImageManager.resize_image(image, 150)
+            img = ImageManager.resize_image(image, 750)
+            thumbnail = ImageManager.resize_image(image, 150)
             img_hash = imagehash.dhash(img)
             if image_object := ImageManager.search_image_with_hash(img_hash):
                 name = name if name else image_object.name
-                img = image_object.image
                 color = image_object.color
+                thumbnail = image_object.thumbnail
+                img = image_object.image
             else:
                 name = name if name else image.name.split('.')[0]
-                color = ImageManager.get_color(img)
+                color = ImageManager.get_color(thumbnail)
+                thumbnail = ImageManager.convert_image_back_from_pillow(thumbnail, name)
 
                 # Even though we're optimizing the image in within the following function, image hash remains the
                 # same for higher quality values
                 img = ImageManager.convert_image_back_from_pillow(img, name)
 
-            Image.objects.create(user=user, name=name, image=img, image_hash=img_hash, color=color,
+            Image.objects.create(user=user, name=name, image=img, thumbnail=thumbnail, image_hash=img_hash, color=color,
                                  permission=permission)
 
     @staticmethod
@@ -100,7 +105,7 @@ class ImageManager(models.Manager):
         output = BytesIO()
         image.save(output, format='JPEG', quality=95, optimize=True)
         output.seek(0)
-        return InMemoryUploadedFile(output, 'ImageField', "%s.jpg" % name, 'image/jpeg',
+        return InMemoryUploadedFile(output, 'ImageField', f"{name}.jpg", 'image/jpeg',
                                     sys.getsizeof(output), None)
 
     @staticmethod
@@ -141,6 +146,7 @@ class Image(models.Model):
     height = models.PositiveIntegerField(blank=False)
     width = models.PositiveIntegerField(blank=False)
     image = models.ImageField(upload_to='images/', height_field='height', width_field='width', blank=False)
+    thumbnail = models.ImageField(upload_to='thumbnails/', blank=False)
     image_hash = models.CharField(max_length=50, blank=False)
 
     class Color(models.TextChoices):

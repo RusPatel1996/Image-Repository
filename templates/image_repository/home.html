@@ -64,7 +64,7 @@
         {% for image in list_of_images %}
             <tr>
                 <td>
-                    <img src='{{ MEDIA_URL }}{{ image.image }}' alt="{{ image.name }}"/>
+                    <img src='{{ MEDIA_URL }}{{ image.thumbnail }}' alt="{{ image.name }}"/>
                 </td>
                 <td>{{ image.name }}</td>
                 <td>{{ image.height }}px</td>
