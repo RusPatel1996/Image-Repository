@@ -1,18 +1,15 @@
-import os.path
 import sys
 from io import BytesIO
 from math import ceil
 
 import PIL.Image
+import imagehash
+from PIL import Image as PILImage
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
-
-from Shopify_Data_Engineer_Intern_Challenge_Summer_2022.settings import MEDIA_ROOT
-from image_repository.models.user import User
-from PIL import Image as PILImage
-import imagehash
-
 from sklearn.cluster import KMeans
+
+from image_repository.models.user import User
 
 
 class ImageManager(models.Manager):

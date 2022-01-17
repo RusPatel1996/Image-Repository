@@ -4,8 +4,8 @@ from django.shortcuts import render
 from django.urls import reverse
 
 from image_repository.forms import SignUpForm, LoginForm, ImageUploadForm, ImageSearchForm
-from image_repository.models.user import UserManager
 from image_repository.models.image import ImageManager
+from image_repository.models.user import UserManager
 from utils.encrypt import Encryption
 
 
@@ -43,7 +43,6 @@ def home(request, encrypted_user_name):
             return HttpResponseRedirect(reverse('image_repository:home', args=(encrypted_user_name,)))
         elif request.POST.get('action') == 'Search':
             images = search(request)
-            # TODO: try sending the request off to another view (one that is hidden) and redirect back
             return home_render(request, image_upload_form, image_search_form, encrypted_user_name, user, images)
     return home_render(request, image_upload_form, image_search_form, encrypted_user_name, user, images)
 
