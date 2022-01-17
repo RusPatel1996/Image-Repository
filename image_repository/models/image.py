@@ -37,7 +37,7 @@ class ImageManager(models.Manager):
 
     @staticmethod
     def search_image_with_hash(image_hash):
-        return Image.objects.filter(image_hash__exact=image_hash).first()
+        return Image.objects.filter(image_hash=image_hash).first()
 
     @staticmethod
     def get_image_hash(image):
@@ -46,7 +46,7 @@ class ImageManager(models.Manager):
 
     @staticmethod
     def get_user_images(user: User):
-        return Image.objects.filter(user__exact=user)
+        return Image.objects.filter(user=user)
 
     @staticmethod
     def upload_images(user: User, images, permission, name=''):
@@ -135,13 +135,13 @@ class ImageManager(models.Manager):
         return pil_image.resize((width, height), PIL.Image.HAMMING, None, 1.5)
 
     @staticmethod
-    def delete_image(user: User, image):
-        Image.objects.get(user=user, image=image)
+    def delete_image(user: User, image_hash):
+        Image.objects.filter(user__exact=user, image_hash=image_hash).first().delete()
 
 
 class Image(models.Model):
     image_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
     name = models.CharField(max_length=100, blank=False)
     height = models.PositiveIntegerField(blank=False)
     width = models.PositiveIntegerField(blank=False)

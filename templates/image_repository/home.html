@@ -17,12 +17,12 @@
     </ul>
 {% endif %}
 
-<h2><u>Hello {% if first_name %}{{ first_name }}{% else %}{{ "Anonymous User" }}{% endif %}</u></h2>
+<h2><u>Hello {% if user_name %}{{ user_name }}{% else %}{{ "Anonymous User" }}{% endif %}</u></h2>
 
 <table>
     <tr>
         <td>
-            <form action="{% url 'image_repository:home' url %}" method="post" enctype="multipart/form-data">
+            <form action="{% url 'image_repository:home' user_name %}" method="post" enctype="multipart/form-data">
                 <fieldset>
                     <legend><h3>Upload</h3></legend>
                     {% csrf_token %}
@@ -34,7 +34,7 @@
             </form>
         </td>
         <td>
-            <form action="{% url 'image_repository:home' url %}" method="post" enctype="multipart/form-data">
+            <form action="{% url 'image_repository:home' user_name %}" method="post" enctype="multipart/form-data">
                 <fieldset>
                     <legend><h3>Search</h3></legend>
                     {% csrf_token %}
@@ -71,6 +71,16 @@
                 <td>{{ image.width }}px</td>
                 <td>{{ image.color }}</td>
                 <td>{{ image.permission }}</td>
+                <td>
+                    <form action="{% url 'image_repository:image' user_name image.image_hash %}" method="post">
+                        {% csrf_token %}
+                        <input type="submit" name="action" value="View">
+                    </form>
+                    <form action="{% url 'image_repository:home' user_name image.image_hash %}" method="post">
+                        {% csrf_token %}
+                        <input type="submit" name="action" value="Delete">
+                    </form>
+                </td>
             </tr>
         {% endfor %}
     </table>

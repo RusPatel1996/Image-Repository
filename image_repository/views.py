@@ -20,10 +20,8 @@ def login(request):
             data = login_form.cleaned_data
             user_name = data.get('user_name')
             password = Encryption.encrypt(data.get('password'))
-            user = UserManager.login_user(user_name, password)
-            if user:
-                encrypted_user_name = Encryption.encrypt(user_name).decode()
-                return HttpResponseRedirect(reverse('image_repository:home', args=(encrypted_user_name,)))
+            if User := UserManager.login_user(user_name, password):
+                return HttpResponseRedirect(reverse('image_repository:home', args=(user_name,)))
     else:
         login_form = LoginForm()
     return render(request, 'image_repository/index.html', {
@@ -31,31 +29,49 @@ def login(request):
     })
 
 
-def home(request, encrypted_user_name):
-    user_name = Encryption.decrypt(encrypted_user_name.encode())
-    user = UserManager.get_user(user_name)
-    images = ImageManager.get_user_images(user)
+def home(request, user_name, image_hash=''):
+    User = UserManager.get_user(user_name)
+    images = ImageManager.get_user_images(User)
     image_upload_form = ImageUploadForm()
     image_search_form = ImageSearchForm()
     if request.method == 'POST':
+        if request.POST.get('action') == 'View':
+            return HttpResponseRedirect(reverse('image_repository:image', args=(user_name, image_hash,)))
+
+        if request.POST.get('action') == 'Delete':
+            ImageManager.delete_image(User, image_hash)
+            messages.success(request, 'Deleted Successfully')
+            return HttpResponseRedirect(reverse('image_repository:home', args=(user_name,)))
+
         if request.POST.get('action') == 'Upload':
-            upload(request, user)
-            return HttpResponseRedirect(reverse('image_repository:home', args=(encrypted_user_name,)))
-        elif request.POST.get('action') == 'Search':
+            upload(request, User)
+            messages.success(request, 'Uploaded Successfully')
+            return HttpResponseRedirect(reverse('image_repository:home', args=(user_name,)))
+
+        if request.POST.get('action') == 'Search':
             images = search(request)
-            return home_render(request, image_upload_form, image_search_form, encrypted_user_name, user, images)
-    return home_render(request, image_upload_form, image_search_form, encrypted_user_name, user, images)
+            messages.success(request, f'Your Search Resulted {len(images)} Items')
+            return home_render(request, image_upload_form, image_search_form, user_name, images)
+
+    return home_render(request, image_upload_form, image_search_form, user_name, images)
 
 
-def upload(request, user):
-    # TODO: Secure uploading and storing
+def image(request, user_name, image_hash):
+    # FIXME: Not showing up at all :(
+    img = ImageManager.search_image_with_hash(image_hash).image
+    return render(request, 'image_repository/image.html', {
+        'user_name': user_name,
+        'image': img,
+    })
+
+
+def upload(request, User):
     image_upload_form = ImageUploadForm(request.POST, request.FILES)
     if image_upload_form.is_valid():
         data = image_upload_form.cleaned_data
         permission = data.get('permission')
         name = data.get('name')
-        ImageManager.upload_images(user, request.FILES, permission, name)
-        messages.success(request, 'Added')
+        ImageManager.upload_images(User, request.FILES, permission, name)
 
 
 def search(request):
@@ -91,11 +107,10 @@ def signup(request):
     })
 
 
-def home_render(request, image_upload_form, image_search_form, encrypted_user_name, user, images):
+def home_render(request, image_upload_form, image_search_form, user_name, images):
     return render(request, 'image_repository/home.html', {
         'image_upload_form': image_upload_form,
         'image_search_form': image_search_form,
-        'url': encrypted_user_name,
-        'first_name': user.first_name,
+        'user_name': user_name,
         'list_of_images': images
     })
