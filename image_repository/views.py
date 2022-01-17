@@ -1,6 +1,5 @@
 from django.contrib import messages
-from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
 
 from image_repository.forms import SignUpForm, LoginForm, ImageUploadForm, ImageSearchForm
@@ -10,7 +9,7 @@ from utils.encrypt import Encryption
 
 
 def index(request):
-    return HttpResponseRedirect('login')
+    return redirect('image_repository:login')
 
 
 def login(request):
@@ -20,8 +19,11 @@ def login(request):
             data = login_form.cleaned_data
             user_name = data.get('user_name')
             password = Encryption.encrypt(data.get('password'))
-            if User := UserManager.login_user(user_name, password):
-                return HttpResponseRedirect(reverse('image_repository:home', args=(user_name,)))
+            if user_id := UserManager.login_user(user_name, password):
+                request.session['user_id'] = user_id
+                return redirect(reverse('image_repository:home', args=(user_name,)))
+            else:
+                messages.error(request, 'Wrong username or password')
     else:
         login_form = LoginForm()
     return render(request, 'image_repository/index.html', {
@@ -29,24 +31,32 @@ def login(request):
     })
 
 
+def logout(request):
+    request.session.flush()
+    return redirect('image_repository:login')
+
+
 def home(request, user_name, image_hash=''):
+    if not request.session.get('user_id'):
+        messages.error(request, 'Please login')
+        return redirect(reverse('image_repository:login'))
     User = UserManager.get_user(user_name)
     images = ImageManager.get_user_images(User)
     image_upload_form = ImageUploadForm()
     image_search_form = ImageSearchForm()
     if request.method == 'POST':
         if request.POST.get('action') == 'View':
-            return HttpResponseRedirect(reverse('image_repository:image', args=(user_name, image_hash,)))
+            return redirect(reverse('image_repository:image', args=(user_name, image_hash,)))
 
         if request.POST.get('action') == 'Delete':
             ImageManager.delete_image(User, image_hash)
             messages.success(request, 'Deleted Successfully')
-            return HttpResponseRedirect(reverse('image_repository:home', args=(user_name,)))
+            return redirect(reverse('image_repository:home', args=(user_name,)))
 
         if request.POST.get('action') == 'Upload':
             upload(request, User)
             messages.success(request, 'Uploaded Successfully')
-            return HttpResponseRedirect(reverse('image_repository:home', args=(user_name,)))
+            return redirect(reverse('image_repository:home', args=(user_name,)))
 
         if request.POST.get('action') == 'Search':
             images = search(request)
@@ -56,12 +66,12 @@ def home(request, user_name, image_hash=''):
     return home_render(request, image_upload_form, image_search_form, user_name, images)
 
 
-def image(request, user_name, image_hash):
-    # FIXME: Not showing up at all :(
+def view_image(request, user_name, image_hash, image_name):
     img = ImageManager.search_image_with_hash(image_hash).image
     return render(request, 'image_repository/image.html', {
         'user_name': user_name,
         'image': img,
+        'image_name': image_name
     })
 
 
@@ -99,7 +109,7 @@ def signup(request):
             last_name = data.get('last_name')
             _ = UserManager.get_or_create_user(user_name, password, first_name, last_name)
             messages.success(request, 'Sign up successful')
-            return HttpResponseRedirect(reverse('image_repository:login'))
+            return redirect(reverse('image_repository:login'))
     else:
         signup_form = SignUpForm()
     return render(request, 'image_repository/signup.html', {

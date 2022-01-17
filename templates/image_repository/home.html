@@ -17,8 +17,6 @@
     </ul>
 {% endif %}
 
-<h2><u>Hello {% if user_name %}{{ user_name }}{% else %}{{ "Anonymous User" }}{% endif %}</u></h2>
-
 <table>
     <tr>
         <td>
@@ -72,7 +70,8 @@
                 <td>{{ image.color }}</td>
                 <td>{{ image.permission }}</td>
                 <td>
-                    <form action="{% url 'image_repository:image' user_name image.image_hash %}" method="post">
+                    <form action="{% url 'image_repository:view_image' user_name image.image_hash image.name %}"
+                          method="post">
                         {% csrf_token %}
                         <input type="submit" name="action" value="View">
                     </form>
@@ -88,7 +87,11 @@
     <p>No items are available.</p>
 {% endif %}
 
-<p><a href="{% url 'image_repository:index' %}">Log out</a></p>
+<form action="{% url 'image_repository:logout' %}" method="post">
+    {% csrf_token %}
+    <input type="submit" name="action" value="logout">
+</form>
+
 
 </body>
 </html>

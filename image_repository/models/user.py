@@ -42,7 +42,7 @@ class UserManager(models.Manager):
     def login_user(user_name: str, password: bytes):
         user = UserManager.get_user(user_name)
         if user and Encryption.decrypt(user.password) == Encryption.decrypt(password):
-            return user
+            return user.user_id
         return None
 
     @staticmethod
