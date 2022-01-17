@@ -43,22 +43,24 @@ def home(request, encrypted_user_name):
             return HttpResponseRedirect(reverse('image_repository:home', args=(encrypted_user_name,)))
         elif request.POST.get('action') == 'Search':
             images = search(request)
+            # TODO: try sending the request off to another view (one that is hidden) and redirect back
             return home_render(request, image_upload_form, image_search_form, encrypted_user_name, user, images)
     return home_render(request, image_upload_form, image_search_form, encrypted_user_name, user, images)
 
 
 def upload(request, user):
+    # TODO: Secure uploading and storing
     image_upload_form = ImageUploadForm(request.POST, request.FILES)
     if image_upload_form.is_valid():
         data = image_upload_form.cleaned_data
         permission = data.get('permission')
         name = data.get('name')
-        ImageManager.add_images(user, request.FILES, permission, name)
+        ImageManager.upload_images(user, request.FILES, permission, name)
         messages.success(request, 'Added')
 
 
 def search(request):
-    image_search_form = ImageSearchForm(request.POST)
+    image_search_form = ImageSearchForm(request.POST, request.FILES)
     if image_search_form.is_valid():
         data = image_search_form.cleaned_data
         height = data.get('height')
@@ -66,7 +68,8 @@ def search(request):
         name = data.get('name')
         color = data.get('color')
         permission = data.get('permission')
-        images = ImageManager.search_image_characteristics(color, permission, height, width, name)
+        image = request.FILES.get('image')
+        images = ImageManager.search_image_characteristics(color, permission, image, height, width, name)
         return images
 
 

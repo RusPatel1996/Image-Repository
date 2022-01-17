@@ -41,9 +41,10 @@ class ImageUploadForm(forms.ModelForm):
 
 
 class ImageSearchForm(forms.ModelForm):
+    name = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'placeholder': 'Optional'}))
     height = forms.IntegerField(required=False, initial=0)
     width = forms.IntegerField(required=False, initial=0)
-    name = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'placeholder': 'Optional'}))
+    image = forms.ImageField(required=False)
 
     class Meta:
         model = Image

@@ -1,10 +1,13 @@
+import os.path
 import sys
 from io import BytesIO
 from math import ceil
 
+import PIL.Image
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
 
+from Shopify_Data_Engineer_Intern_Challenge_Summer_2022.settings import MEDIA_ROOT
 from image_repository.models.user import User
 from PIL import Image as PILImage
 import imagehash
@@ -14,59 +17,99 @@ from sklearn.cluster import KMeans
 
 class ImageManager(models.Manager):
     @staticmethod
-    def search_image_characteristics(color, permission, height=0, width=0, name=''):
+    def search_image_characteristics(color, permission, image=None, height=0, width=0, name=''):
         objects = Image.objects.filter(height__gt=height, width__gt=width, name__icontains=name)
         if color != Image.Color.ANY:
             objects = objects.filter(color=color)
         if permission != Image.Permission.ALL:
             objects = objects.filter(permission=permission)
+        if image:
+            objects = ImageManager.search_images_with_image(image, objects, similarity=75)
         return objects
 
     @staticmethod
-    def search_images_with_image(image):
-        # TODO: add the rest of the functionality
-
-        image_hash = imagehash.average_hash(PILImage.open(image))
-        ImageManager.search_image_with_hash(image_hash)
-        pass
+    def search_images_with_image(image, objects, similarity):
+        threshold = 1 - (similarity / 100)
+        diff_limit = int(threshold * (8 ** 2))  # 8 refers to the default hash size for dhash
+        image_hash = ImageManager.get_image_hash(image)
+        for obj in objects:
+            if abs(image_hash - imagehash.hex_to_hash(obj.image_hash)) <= diff_limit:
+                yield obj
 
     @staticmethod
     def search_image_with_hash(image_hash):
         return Image.objects.filter(image_hash__exact=image_hash).first()
 
     @staticmethod
+    def get_image_hash(image):
+        pil_image = PILImage.open(image)
+        return imagehash.dhash(pil_image)
+
+    @staticmethod
     def get_user_images(user: User):
         return Image.objects.filter(user=user)
 
     @staticmethod
-    def add_images(user: User, images, permission, name=''):
+    def upload_images(user: User, images, permission, name=''):
+        """ Can upload large amounts of images quickly by reducing them to 150px or less and optimizing before saving
+        to database. Remove color field to increase performance. Images are uploaded as private unless otherwise
+        chosen by the user. """
         for image in images.getlist('image'):
-            image = ImageManager.resize_image(image, 150)
-            image_hash = imagehash.average_hash(image)
-            if image_object := ImageManager.search_image_with_hash(image_hash):
+            img = ImageManager.resize_image(image, 150)
+            img_hash = imagehash.dhash(img)
+            if image_object := ImageManager.search_image_with_hash(img_hash):
                 name = name if name else image_object.name
-                image = image_object.image
+                img = image_object.image
                 color = image_object.color
             else:
-                # TODO fix name
-                name = name if name else "test"
-                color = ImageManager.calculate_color(image)
-                image = ImageManager.compress_size(image, name)
-            Image.objects.create(user=user, name=name, image=image, image_hash=image_hash, color=color,
+                name = name if name else image.name.split('.')[0]
+                color = ImageManager.get_color(img)
+
+                # Even though we're optimizing the image in within the following function, image hash remains the
+                # same for higher quality values
+                img = ImageManager.convert_image_back_from_pillow(img, name)
+
+            Image.objects.create(user=user, name=name, image=img, image_hash=img_hash, color=color,
                                  permission=permission)
 
     @staticmethod
-    def compress_size(img, name):
+    def get_color(image):
+        red, green, blue = ImageManager.calculate_rgb(image)
+        primary_threshold = 0.85
+        secondary_threshold = 0.50
+        if red / (green + blue) > primary_threshold:
+            return Image.Color.RED
+        elif green / (red + blue) > primary_threshold:
+            return Image.Color.GREEN
+        elif blue / (red + green) > primary_threshold:
+            return Image.Color.BLUE
+        else:
+            majority = max(red, green, blue)
+            if majority == red:
+                if red / (green + blue) > secondary_threshold:
+                    return Image.Color.YELLOW
+                return Image.Color.RED
+            elif majority == green:
+                if green / (red + blue) > secondary_threshold:
+                    return Image.Color.CYAN
+                return Image.Color.GREEN
+            else:
+                if blue / (red + green) > secondary_threshold:
+                    return Image.Color.PURPLE
+                return Image.Color.BLUE
+
+    @staticmethod
+    def convert_image_back_from_pillow(image, name):
         output = BytesIO()
-        img.save(output, format='JPEG', quality=95)
+        image.save(output, format='JPEG', quality=95, optimize=True)
         output.seek(0)
         return InMemoryUploadedFile(output, 'ImageField', "%s.jpg" % name, 'image/jpeg',
                                     sys.getsizeof(output), None)
 
     @staticmethod
-    def calculate_color(img):
-        ''' Slows down the uploading performance by at least 4x '''
-        pixels = img.getdata()
+    def calculate_rgb(image):
+        """ Slows down the uploading performance by at least 4x """
+        pixels = image.getdata()
         n = 2
         kmeans = KMeans(n_clusters=n)
         kmeans.fit(pixels)
@@ -78,33 +121,7 @@ class ImageManager(models.Manager):
             blue += rgb[2]
         red, green, blue = red // n, green // n, blue // n
 
-        return ImageManager.get_color(red, green, blue)
-
-    @staticmethod
-    def get_color(red, green, blue):
-        primary_rate = 0.85
-        secondary_rate = 0.50
-        if red / (green + blue) > primary_rate:
-            return Image.Color.RED
-        elif green / (red + blue) > primary_rate:
-            return Image.Color.GREEN
-        elif blue / (red + green) > primary_rate:
-            return Image.Color.BLUE
-        else:
-            majority = max(red, green, blue)
-            if majority == red:
-                if red / (green + blue) > secondary_rate:
-                    return Image.Color.YELLOW
-                return Image.Color.RED
-            elif majority == green:
-                if green / (red + blue) > secondary_rate:
-                    return Image.Color.CYAN
-                return Image.Color.GREEN
-            else:
-                if blue / (red + green) > secondary_rate:
-                    return Image.Color.PURPLE
-                return Image.Color.BLUE
-
+        return red, green, blue
 
     @staticmethod
     def resize_image(image, largest_length):
@@ -113,7 +130,7 @@ class ImageManager(models.Manager):
         width, height = pil_image.size
         factor = width / largest_length if width > height else height / largest_length
         width, height = ceil(width / factor), ceil(height / factor)
-        return pil_image.resize((width, height))
+        return pil_image.resize((width, height), PIL.Image.HAMMING, None, 1.5)
 
     @staticmethod
     def delete_image(user: User, image):
@@ -138,7 +155,7 @@ class Image(models.Model):
         PURPLE = 'Purple'
         CYAN = 'Cyan'
 
-    color = models.CharField(max_length=7, choices=Color.choices, blank=True, default=Color.ANY)
+    color = models.CharField(max_length=7, choices=Color.choices, default=Color.ANY)
 
     class Permission(models.TextChoices):
         ALL = 'All',
