@@ -21,7 +21,8 @@ class ImageManager(models.Manager):
             return ImageManager.__instance
         return ImageManager.__instance
 
-    def search_image_characteristics(self, user: User, color, permission, image=None, height=None, width=None, name=''):
+    def search_image_characteristics(self, user: User, color, permission, sort_criteria, image=None, height=None,
+                                     width=None, name=''):
         height = 0 if not height else height
         width = 0 if not width else width
         objects = self.get_user_images(user)
@@ -32,6 +33,8 @@ class ImageManager(models.Manager):
             objects = objects.filter(permission__exact=permission)
         if image:
             objects = self.search_images_with_image(image, objects, similarity=75)
+        if sort_criteria != 'none':
+            objects = objects.order_by(sort_criteria)
         return objects
 
     def search_images_with_image(self, image, objects, similarity):
@@ -50,7 +53,7 @@ class ImageManager(models.Manager):
         return objects.filter(image_hash=image_hash).first().image
 
     def get_user_images(self, user: User):
-        return Image.objects.select_related().filter(user__exact=user)
+        return Image.objects.select_related().filter(user__exact=user).order_by('-last_updated')
 
     def upload_images(self, user: User, images, permission, name=''):
         """ Can upload large amounts of images quickly by reducing them to 150px or less and optimizing before saving

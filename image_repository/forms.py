@@ -3,6 +3,14 @@ from django import forms
 from image_repository.models.image import Image
 from image_repository.models.user import User
 
+from django.core.exceptions import ValidationError
+
+
+def file_size(value):
+    limit = 5 * 1024 * 1024
+    if value.size > limit:
+        raise ValidationError('File too large. Size should not exceed 5 MiB.')
+
 
 class LoginForm(forms.Form):
     user_name = forms.CharField(max_length=100)
@@ -24,20 +32,17 @@ class SignUpForm(forms.ModelForm):
         }
 
 
-class ImageUploadForm(forms.ModelForm):
+class ImageUploadForm(forms.Form):
     name = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'placeholder': 'Optional'}))
     options = (
         (Image.Permission.PRIVATE, Image.Permission.PRIVATE),
         (Image.Permission.PUBLIC, Image.Permission.PUBLIC),
     )
     permission = forms.CharField(widget=forms.Select(choices=options))
+    image = forms.ImageField(validators=[file_size], widget=forms.ClearableFileInput(attrs={'multiple': True}))
 
     class Meta:
         model = Image
-        fields = ['image']
-        widgets = {
-            'image': forms.ClearableFileInput(attrs={'multiple': True}),
-        }
 
 
 class ImageSearchForm(forms.ModelForm):
@@ -45,6 +50,14 @@ class ImageSearchForm(forms.ModelForm):
     height = forms.IntegerField(required=False, initial=0)
     width = forms.IntegerField(required=False, initial=0)
     image = forms.ImageField(required=False)
+    options = (
+        ('none', '------'),
+        ('name', 'Name'),
+        ('height', 'Height'),
+        ('width', 'Width'),
+        ('color', 'Color'),
+    )
+    sort_criteria = forms.CharField(widget=forms.Select(choices=options))
 
     class Meta:
         model = Image

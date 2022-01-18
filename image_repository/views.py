@@ -22,7 +22,7 @@ def login(request):
             data = login_form.cleaned_data
             user_name = data.get('user_name')
             password = Encryption.encrypt(data.get('password'))
-            if user_id := UsrMan.login_user(user_name, password):
+            if UsrMan.login_user(user_name, password):
                 request.session['user_name'] = user_name
                 return redirect(reverse('image_repository:home', args=(user_name,)))
             else:
@@ -48,29 +48,34 @@ def home(request, user_name, image_hash=''):
     image_upload_form = ImageUploadForm()
     image_search_form = ImageSearchForm()
     if request.method == 'POST':
-        if request.POST.get('action') == 'View':
-            img = ImgMan.search_image_with_hash(user, image_hash)
-            return render(request, 'image_repository/image.html', {
-                'user_name': user_name,
-                'image': img,
-            })
-        if request.POST.get('action') == 'Delete':
-            ImgMan.delete_image(user, image_hash)
-            messages.success(request, 'Deleted Successfully')
-            return redirect(reverse('image_repository:home', args=(user_name,)))
-
-        if request.POST.get('action') == 'Upload':
+        action = request.POST.get('action')
+        if action == 'Upload':
             count = images.count()
             upload(request, user)
             if images.count() > count:
                 messages.success(request, 'Uploaded Successfully')
             else:
                 messages.error(request, 'Upload Unsuccessful')
-            return redirect(reverse('image_repository:home', args=(user_name,)))
+            return redirect(request.path_info)
 
-        if request.POST.get('action') == 'Search':
+        if action == 'Search':
             images = search(request, user)
             return home_render(request, image_upload_form, image_search_form, user_name, images)
+
+        if action == 'reset':
+            return redirect(request.path_info)
+
+        if action == 'View':
+            img = ImgMan.search_image_with_hash(user, image_hash)
+            return render(request, 'image_repository/image.html', {
+                'user_name': user_name,
+                'image': img,
+            })
+
+        if action == 'Delete':
+            ImgMan.delete_image(user, image_hash)
+            messages.success(request, 'Deleted Successfully')
+            return redirect(request.path_info)
     return home_render(request, image_upload_form, image_search_form, user_name, images)
 
 
@@ -87,13 +92,14 @@ def search(request, user):
     image_search_form = ImageSearchForm(request.POST, request.FILES)
     if image_search_form.is_valid():
         data = image_search_form.cleaned_data
+        sort_criteria = data.get('sort_criteria')
         height = data.get('height')
         width = data.get('width')
         name = data.get('name')
         color = data.get('color')
         permission = data.get('permission')
         image = request.FILES.get('image')
-        images = ImgMan.search_image_characteristics(user, color, permission, image, height, width, name)
+        images = ImgMan.search_image_characteristics(user, color, permission, sort_criteria, image, height, width, name)
         return images
 
 
