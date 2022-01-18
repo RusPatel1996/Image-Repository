@@ -7,6 +7,9 @@ from image_repository.models.image import ImageManager
 from image_repository.models.user import UserManager
 from utils.encrypt import Encryption
 
+ImgMan = ImageManager.instance()  # Singleton
+UsrMan = UserManager.instance()  # Singleton
+
 
 def index(request):
     return redirect('image_repository:login')
@@ -19,8 +22,8 @@ def login(request):
             data = login_form.cleaned_data
             user_name = data.get('user_name')
             password = Encryption.encrypt(data.get('password'))
-            if user_id := UserManager.login_user(user_name, password):
-                request.session['user_id'] = user_id
+            if user_id := UsrMan.login_user(user_name, password):
+                request.session['user_name'] = user_name
                 return redirect(reverse('image_repository:home', args=(user_name,)))
             else:
                 messages.error(request, 'Wrong username or password')
@@ -37,54 +40,50 @@ def logout(request):
 
 
 def home(request, user_name, image_hash=''):
-    if not request.session.get('user_id'):
+    if request.session.get('user_name') != user_name:
         messages.error(request, 'Please login')
         return redirect(reverse('image_repository:login'))
-    User = UserManager.get_user(user_name)
-    images = ImageManager.get_user_images(User)
+    user = UsrMan.get_user(user_name)
+    images = ImgMan.get_user_images(user)
     image_upload_form = ImageUploadForm()
     image_search_form = ImageSearchForm()
     if request.method == 'POST':
         if request.POST.get('action') == 'View':
-            return redirect(reverse('image_repository:image', args=(user_name, image_hash,)))
-
+            img = ImgMan.search_image_with_hash(user, image_hash)
+            return render(request, 'image_repository/image.html', {
+                'user_name': user_name,
+                'image': img,
+            })
         if request.POST.get('action') == 'Delete':
-            ImageManager.delete_image(User, image_hash)
+            ImgMan.delete_image(user, image_hash)
             messages.success(request, 'Deleted Successfully')
             return redirect(reverse('image_repository:home', args=(user_name,)))
 
         if request.POST.get('action') == 'Upload':
-            upload(request, User)
-            messages.success(request, 'Uploaded Successfully')
+            count = images.count()
+            upload(request, user)
+            if images.count() > count:
+                messages.success(request, 'Uploaded Successfully')
+            else:
+                messages.error(request, 'Upload Unsuccessful')
             return redirect(reverse('image_repository:home', args=(user_name,)))
 
         if request.POST.get('action') == 'Search':
-            images = search(request)
-            messages.success(request, f'Your Search Resulted {len(images)} Items')
+            images = search(request, user)
             return home_render(request, image_upload_form, image_search_form, user_name, images)
-
     return home_render(request, image_upload_form, image_search_form, user_name, images)
 
 
-def view_image(request, user_name, image_hash, image_name):
-    img = ImageManager.search_image_with_hash(image_hash).image
-    return render(request, 'image_repository/image.html', {
-        'user_name': user_name,
-        'image': img,
-        'image_name': image_name
-    })
-
-
-def upload(request, User):
+def upload(request, user):
     image_upload_form = ImageUploadForm(request.POST, request.FILES)
     if image_upload_form.is_valid():
         data = image_upload_form.cleaned_data
         permission = data.get('permission')
         name = data.get('name')
-        ImageManager.upload_images(User, request.FILES, permission, name)
+        ImgMan.upload_images(user, request.FILES, permission, name)
 
 
-def search(request):
+def search(request, user):
     image_search_form = ImageSearchForm(request.POST, request.FILES)
     if image_search_form.is_valid():
         data = image_search_form.cleaned_data
@@ -94,7 +93,7 @@ def search(request):
         color = data.get('color')
         permission = data.get('permission')
         image = request.FILES.get('image')
-        images = ImageManager.search_image_characteristics(color, permission, image, height, width, name)
+        images = ImgMan.search_image_characteristics(user, color, permission, image, height, width, name)
         return images
 
 
@@ -107,7 +106,7 @@ def signup(request):
             password = Encryption.encrypt(data.get('password'))
             first_name = data.get('first_name')
             last_name = data.get('last_name')
-            _ = UserManager.get_or_create_user(user_name, password, first_name, last_name)
+            _ = UsrMan.get_or_create_user(user_name, password, first_name, last_name)
             messages.success(request, 'Sign up successful')
             return redirect(reverse('image_repository:login'))
     else:

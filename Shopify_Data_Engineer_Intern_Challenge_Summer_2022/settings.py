@@ -31,11 +31,6 @@ CSRF_TRUSTED_ORIGINS = ['https://shopify-data-eng-intern.herokuapp.com']
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# SESSION_COOKIE_SECURE = False
-# CSRF_COOKIE_SECURE = False
-# SECURE_SSL_REDIRECT = False
-# SECURE_CONTENT_TYPE_NOSNIFF = False
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -45,10 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'image_repository.apps.ImageRepositoryConfig',
-    'django_cleanup.apps.CleanupConfig',
 ]
 
 MIDDLEWARE = [
+    'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -57,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
 ROOT_URLCONF = 'Shopify_Data_Engineer_Intern_Challenge_Summer_2022.urls'
@@ -80,6 +76,14 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'Shopify_Data_Engineer_Intern_Challenge_Summer_2022.wsgi.application'
+
+# Using database as cache
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'cache_table',
+    }
+}
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases

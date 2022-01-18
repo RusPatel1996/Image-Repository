@@ -4,8 +4,16 @@ from utils.encrypt import Encryption
 
 
 class UserManager(models.Manager):
+    __instance = None
+
     @staticmethod
-    def get_user(user_name: str):
+    def instance():
+        if not UserManager.__instance:
+            UserManager.__instance = UserManager()
+            return UserManager.__instance
+        return UserManager.__instance
+
+    def get_user(self, user_name: str):
         try:
             user = User.objects.get(user_name=user_name.lower())
         except User.DoesNotExist as err:
@@ -16,8 +24,7 @@ class UserManager(models.Manager):
             return user
         return None
 
-    @staticmethod
-    def get_or_create_user(user_name: str, password: bytes, first_name: str = '',
+    def get_or_create_user(self, user_name: str, password: bytes, first_name: str = '',
                            last_name: str = ''):
         user, _ = User.objects.get_or_create(
             user_name=user_name.lower(),
@@ -27,8 +34,7 @@ class UserManager(models.Manager):
         )
         return user
 
-    @staticmethod
-    def update_or_create_user(user_name: str, password: bytes, first_name: str = '',
+    def update_or_create_user(self, user_name: str, password: bytes, first_name: str = '',
                               last_name: str = ''):
         user, _ = User.objects.update_or_create(
             user_name=user_name.lower(),
@@ -38,16 +44,14 @@ class UserManager(models.Manager):
         )
         return user
 
-    @staticmethod
-    def login_user(user_name: str, password: bytes):
-        user = UserManager.get_user(user_name)
+    def login_user(self, user_name: str, password: bytes):
+        user = self.get_user(user_name)
         if user and Encryption.decrypt(user.password) == Encryption.decrypt(password):
             return user.user_id
         return None
 
-    @staticmethod
-    def delete_user(user_name: str):
-        user = UserManager.get_user(user_name)
+    def delete_user(self, user_name: str):
+        user = self.get_user(user_name)
         if user:
             return user.delete(user)
         return user

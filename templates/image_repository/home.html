@@ -40,6 +40,7 @@
                         {{ image_search_form.as_table }}
                     </table>
                     <input name="action" type="submit" value="Search">
+                    <input name="action" type="submit" value="Reset">
                 </fieldset>
             </form>
         </td>
@@ -70,7 +71,7 @@
                 <td>{{ image.color }}</td>
                 <td>{{ image.permission }}</td>
                 <td>
-                    <form action="{% url 'image_repository:view_image' user_name image.image_hash image.name %}"
+                    <form action="{% url 'image_repository:home' user_name image.image_hash  %}"
                           method="post">
                         {% csrf_token %}
                         <input type="submit" name="action" value="View">

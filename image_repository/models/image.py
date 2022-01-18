@@ -2,7 +2,6 @@ import sys
 from io import BytesIO
 from math import ceil
 
-import PIL.Image
 import imagehash
 from PIL import Image as PILImage
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -13,70 +12,73 @@ from image_repository.models.user import User
 
 
 class ImageManager(models.Manager):
+    __instance = None
+
     @staticmethod
-    def search_image_characteristics(color, permission, image=None, height=None, width=None, name=''):
+    def instance():
+        if not ImageManager.__instance:
+            ImageManager.__instance = ImageManager()
+            return ImageManager.__instance
+        return ImageManager.__instance
+
+    def search_image_characteristics(self, user: User, color, permission, image=None, height=None, width=None, name=''):
         height = 0 if not height else height
         width = 0 if not width else width
-        objects = Image.objects.filter(height__gte=height, width__gte=width, name__icontains=name)
+        objects = self.get_user_images(user)
+        objects = objects.filter(height__gte=height, width__gte=width, name__icontains=name)
         if color != Image.Color.ANY:
             objects = objects.filter(color__exact=color)
         if permission != Image.Permission.ALL:
             objects = objects.filter(permission__exact=permission)
         if image:
-            objects = ImageManager.search_images_with_image(image, objects, similarity=75)
+            objects = self.search_images_with_image(image, objects, similarity=75)
         return objects
 
-    @staticmethod
-    def search_images_with_image(image, objects, similarity):
+    def search_images_with_image(self, image, objects, similarity):
         threshold = 1 - (similarity / 100)
         diff_limit = int(threshold * (8 ** 2))  # 8 refers to the default hash size for dhash
-        image_hash = ImageManager.get_image_hash(image)
+        pil_image = PILImage.open(image)
+        image_hash = imagehash.dhash(pil_image)
+        result = []
         for obj in objects:
             if abs(image_hash - imagehash.hex_to_hash(obj.image_hash)) <= diff_limit:
-                yield obj
+                result.append(obj)
+        return result
 
-    @staticmethod
-    def search_image_with_hash(image_hash):
-        return Image.objects.filter(image_hash=image_hash).first()
+    def search_image_with_hash(self, user: User, image_hash):
+        objects = self.get_user_images(user)
+        return objects.filter(image_hash=image_hash).first().image
 
-    @staticmethod
-    def get_image_hash(image):
-        pil_image = PILImage.open(image)
-        return imagehash.dhash(pil_image)
+    def get_user_images(self, user: User):
+        return Image.objects.select_related().filter(user__exact=user)
 
-    @staticmethod
-    def get_user_images(user: User):
-        return Image.objects.filter(user=user)
-
-    @staticmethod
-    def upload_images(user: User, images, permission, name=''):
+    def upload_images(self, user: User, images, permission, name=''):
         """ Can upload large amounts of images quickly by reducing them to 150px or less and optimizing before saving
         to database. Remove color field to increase performance. Images are uploaded as private unless otherwise
         chosen by the user. """
         for image in images.getlist('image'):
-            img = ImageManager.resize_image(image, 750)
-            thumbnail = ImageManager.resize_image(image, 150)
+            img = self.resize_image(image, 750)
+            thumbnail = self.resize_image(image, 150)
             img_hash = imagehash.dhash(img)
-            if image_object := ImageManager.search_image_with_hash(img_hash):
+            if image_object := Image.objects.filter(image_hash=img_hash).first():
                 name = name if name else image_object.name
                 color = image_object.color
                 thumbnail = image_object.thumbnail
                 img = image_object.image
             else:
                 name = name if name else image.name.split('.')[0]
-                color = ImageManager.get_color(thumbnail)
-                thumbnail = ImageManager.convert_image_back_from_pillow(thumbnail, name)
+                color = self.get_color(thumbnail)
+                thumbnail = self.convert_image_back_from_pillow(thumbnail, name)
 
                 # Even though we're optimizing the image in within the following function, image hash remains the
                 # same for higher quality values
-                img = ImageManager.convert_image_back_from_pillow(img, name)
+                img = self.convert_image_back_from_pillow(img, name)
 
             Image.objects.create(user=user, name=name, image=img, thumbnail=thumbnail, image_hash=img_hash, color=color,
                                  permission=permission)
 
-    @staticmethod
-    def get_color(image):
-        red, green, blue = ImageManager.calculate_rgb(image)
+    def get_color(self, image):
+        red, green, blue = self.calculate_rgb(image)
         primary_threshold = 0.85
         secondary_threshold = 0.50
         if red / (green + blue) > primary_threshold:
@@ -100,16 +102,14 @@ class ImageManager(models.Manager):
                     return Image.Color.PURPLE
                 return Image.Color.BLUE
 
-    @staticmethod
-    def convert_image_back_from_pillow(image, name):
+    def convert_image_back_from_pillow(self, image, name):
         output = BytesIO()
         image.save(output, format='JPEG', quality=95, optimize=True)
         output.seek(0)
-        return InMemoryUploadedFile(output, 'ImageField', f"{name}.jpg", 'image/jpeg',
+        return InMemoryUploadedFile(output, 'ImageField', f'{name}.jpg', 'image/jpeg',
                                     sys.getsizeof(output), None)
 
-    @staticmethod
-    def calculate_rgb(image):
+    def calculate_rgb(self, image):
         """ Slows down the uploading performance by at least 4x """
         pixels = image.getdata()
         n = 2
@@ -125,28 +125,27 @@ class ImageManager(models.Manager):
 
         return red, green, blue
 
-    @staticmethod
-    def resize_image(image, largest_length):
+    def resize_image(self, image, largest_length):
         pil_image = PILImage.open(image)
         pil_image = pil_image.convert('RGB')
         width, height = pil_image.size
         factor = width / largest_length if width > height else height / largest_length
         width, height = ceil(width / factor), ceil(height / factor)
-        return pil_image.resize((width, height), PIL.Image.HAMMING, None, 1.5)
+        return pil_image.resize((width, height), PILImage.HAMMING, None, 1.5)
 
-    @staticmethod
-    def delete_image(user: User, image_hash):
+    def delete_image(self, user: User, image_hash):
         Image.objects.filter(user__exact=user, image_hash=image_hash).first().delete()
 
 
 class Image(models.Model):
     image_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=False, db_index=True)
     name = models.CharField(max_length=100, blank=False)
     height = models.PositiveIntegerField(blank=False)
     width = models.PositiveIntegerField(blank=False)
-    image = models.ImageField(upload_to='images/', height_field='height', width_field='width', blank=False)
-    thumbnail = models.ImageField(upload_to='thumbnails/', blank=False)
+    image = models.ImageField(upload_to='images/', height_field='height', width_field='width', blank=False,
+                              db_index=True)
+    thumbnail = models.ImageField(upload_to='thumbnails/', blank=False, db_index=True)
     image_hash = models.CharField(max_length=50, blank=False)
 
     class Color(models.TextChoices):
