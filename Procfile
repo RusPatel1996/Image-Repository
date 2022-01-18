@@ -1,2 +1,2 @@
 release: python manage.py migrate
-web: gunicorn myproject.wsgi
+web: gunicorn shopify-data-eng-intern.wsgi
