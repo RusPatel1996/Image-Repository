@@ -13,11 +13,11 @@ import os
 
 import dj_database_url
 from pathlib import Path
-from django.conf.global_settings import DATABASES
+
 import django_heroku
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-s*$wddvxu$0g4ak8*7n6z%o3uo4x7$(@&=r6(l-p8n4z6+opz9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['shopify-data-eng-intern.herokuapp.com']
 
 CSRF_TRUSTED_ORIGINS = ['https://shopify-data-eng-intern.herokuapp.com']
 
@@ -79,7 +79,12 @@ WSGI_APPLICATION = 'Shopify_Data_Engineer_Intern_Challenge_Summer_2022.wsgi.appl
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators

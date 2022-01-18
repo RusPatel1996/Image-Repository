@@ -1,2 +1,2 @@
 release: python manage.py migrate
-web: gunicorn shopify-data-eng-intern.wsgi
+web: gunicorn Shopify_Data_Engineer_Intern_Challenge_Summer_2022.wsgi --preload
