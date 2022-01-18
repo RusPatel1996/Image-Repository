@@ -1,7 +1,5 @@
 from django.db import models
 
-from utils.encrypt import Encryption
-
 
 class UserManager(models.Manager):
     __instance = None
@@ -46,7 +44,7 @@ class UserManager(models.Manager):
 
     def login_user(self, user_name: str, password: bytes):
         user = self.get_user(user_name)
-        if user and Encryption.decrypt(user.password) == Encryption.decrypt(password):
+        if user and user.password == password:
             return user.user_id
         return None
 

@@ -5,7 +5,6 @@ from django.urls import reverse
 from image_repository.forms import SignUpForm, LoginForm, ImageUploadForm, ImageSearchForm
 from image_repository.models.image import ImageManager
 from image_repository.models.user import UserManager
-from utils.encrypt import Encryption
 
 ImgMan = ImageManager.instance()  # Singleton
 UsrMan = UserManager.instance()  # Singleton
@@ -21,7 +20,7 @@ def login(request):
         if login_form.is_valid():
             data = login_form.cleaned_data
             user_name = data.get('user_name')
-            password = Encryption.encrypt(data.get('password'))
+            password = data.get('password')
             if UsrMan.login_user(user_name, password):
                 request.session['user_name'] = user_name
                 return redirect(reverse('image_repository:home', args=(user_name,)))
@@ -109,7 +108,7 @@ def signup(request):
         if signup_form.is_valid():
             data = signup_form.cleaned_data
             user_name = data.get('user_name')
-            password = Encryption.encrypt(data.get('password'))
+            password = data.get('password')
             first_name = data.get('first_name')
             last_name = data.get('last_name')
             _ = UsrMan.get_or_create_user(user_name, password, first_name, last_name)
