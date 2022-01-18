@@ -11,9 +11,9 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import os
 
-import DATABASES as DATABASES
 import dj_database_url
 from pathlib import Path
+from django.conf.global_settings import DATABASES
 import django_heroku
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
