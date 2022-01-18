@@ -16,5 +16,5 @@ If you run into any problems accessing the website then you should be able to ru
 7. Enter the virtual environment using ```source venv/Scripts/activate```
 8. Install all dependencies using ```pip install -r requirements.txt```
 9. Uncomment the ```PRIVATE_KEY``` on line 23 within Shopify_Data_Engineer_Intern_Challenge_Summer_2022/settings.py
-10. The database should be ready but in case tables are missing, run ```python manage.py makemigrations``` followed by ```python manage.py migrate``` and ```python manage.py createcachetable```
+10. The database should be ready but in case tables are missing, run ```python manage.py makemigrations``` followed by ```python manage.py migrate```
 11. run ```python manage.py runserver``` and open the development server on the url given (usually http://127.0.0.1:8000/)

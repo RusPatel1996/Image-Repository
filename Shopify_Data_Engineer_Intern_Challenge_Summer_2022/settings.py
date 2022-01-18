@@ -43,7 +43,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -52,7 +51,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
 ROOT_URLCONF = 'Shopify_Data_Engineer_Intern_Challenge_Summer_2022.urls'
@@ -76,14 +74,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'Shopify_Data_Engineer_Intern_Challenge_Summer_2022.wsgi.application'
-
-# Using database as cache
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-        'LOCATION': 'cache_table',
-    }
-}
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases

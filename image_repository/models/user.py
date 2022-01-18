@@ -60,7 +60,7 @@ class User(models.Model):
     first_name = models.CharField(max_length=100, blank=True, null=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
     user_name = models.CharField(unique=True, max_length=100, blank=False)
-    password = models.BinaryField(max_length=50, blank=False)
+    password = models.CharField(max_length=50, blank=False)
 
     objects = UserManager()
 
