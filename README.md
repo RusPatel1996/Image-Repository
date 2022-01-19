@@ -15,7 +15,7 @@ Follow the steps below to run this application locally: \
 2. Make sure python and pip are on PATH env variables: https://docs.python.org/3/using/windows.html
 3. Download git bash terminal: https://git-scm.com/download/win
 4. Download this repository on your desktop, unzip it, and open the git bash terminal within the repo's directory
-5. Install Virtualenv using ```python -m venv env```
+5. Install Virtualenv using ```python -m venv venv```
 7. Enter the virtual environment using ```source venv/Scripts/activate```
 8. Install all dependencies using ```pip install -r requirements.txt```
 10. The database should be ready but in case tables are missing, run ```python manage.py makemigrations``` followed by ```python manage.py migrate```
